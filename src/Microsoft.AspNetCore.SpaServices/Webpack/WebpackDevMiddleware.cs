@@ -40,13 +40,7 @@ namespace Microsoft.AspNetCore.Builder
             // because it must *not* restart when files change (if it did, you'd lose all the benefits of Webpack
             // middleware). And since this is a dev-time-only feature, it doesn't matter if the default transport isn't
             // as fast as some theoretical future alternative.
-            var nodeServicesOptions = new NodeServicesOptions(appBuilder.ApplicationServices);
-            nodeServicesOptions.WatchFileExtensions = new string[] {}; // Don't watch anything
-            if (!string.IsNullOrEmpty(options.ProjectPath))
-            {
-                nodeServicesOptions.ProjectPath = options.ProjectPath;
-            }
-
+            var nodeServicesOptions = CreateNodeServicesOptions(appBuilder.ApplicationServices, options);
             var nodeServices = NodeServicesFactory.CreateNodeServices(nodeServicesOptions);
 
             // Get a filename matching the middleware Node script
@@ -89,6 +83,26 @@ namespace Microsoft.AspNetCore.Builder
                     return Task.FromResult(0);
                 });
             });
+        }
+
+        private static NodeServicesOptions CreateNodeServicesOptions(
+            IServiceProvider serviceProvider, WebpackDevMiddlewareOptions options)
+        {
+            var nodeServicesOptions = new NodeServicesOptions(serviceProvider)
+            {
+                WatchFileExtensions = new string[] {} // Don't watch anything
+            };
+
+            if (!string.IsNullOrEmpty(options.ProjectPath))
+            {
+                nodeServicesOptions.ProjectPath = options.ProjectPath;
+            }
+            if (options.EnvironmentVariables != null)
+            {
+                nodeServicesOptions.EnvironmentVariables = options.EnvironmentVariables;
+            }
+
+            return nodeServicesOptions;
         }
 
 #pragma warning disable CS0649
